@@ -8,18 +8,41 @@ const fs = require('fs');
 // });
 
 let deck = 
-    {
-        heroes: [
-            [4000, 1], 
-            [4003, 1],
-        ],
-
-        cards: [
-            [4004, 3]
-        ],
-        name:"ZoosCluze"
-    }
-;
+{ heroes: [],
+    cards:
+     [ { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 },
+       { id: 0, count: 0 } ],
+    name: 'Green/Black Example' }
 // console.log(encoder.encodeBytesToString(0010101));
+console.log('ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__');
 
 console.log(encoder.encodeDeck(deck));

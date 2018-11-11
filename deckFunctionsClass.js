@@ -6,19 +6,20 @@ module.exports = CArtifactDeckEncoder = {
     headerSize: 3,
 
     encodeDeck: function (deckContents) {
+        console.log("deckContents");
+        
         if (!deckContents) throw Error("no deck contents passed");
 
         let bytes = this.encodeBytes(deckContents);
         
-        
-        if (!bytes) return false;
+        if (!bytes) throw Error("no bytes in encodeDeck");
         let deckCode = this.encodeBytesToString(bytes);
-        
         
         return deckCode;
     },
     encodeBytes: function (deckContents) {
-        //need the set check here        
+        
+        //need the set check here
         if (!this.isSet(deckContents) || !this.isSet(deckContents.heroes) || !this.isSet(deckContents.cards)) {
             throw Error("deck content, heroes, or cards not a set");
         }
@@ -39,9 +40,9 @@ module.exports = CArtifactDeckEncoder = {
         if (!this.addByte(bytes, dummyChecksum)) return false;
 
         nameLen = 0;
-        //let name = "";
+        let name = "";
         if (this.isSet(deckContents.name)) {
-            var name = deckContents.name.replace(/<(?:.|\n)*?>/gm, '');//may need to init name on this line instead of 36. need again in line 112
+            name = deckContents.name.replace(/<(?:.|\n)*?>/gm, '');//may need to init name on this line instead of 36. need again in line 112
             let trimLength = name.length;
 
             while (trimLength > 63) {
@@ -68,10 +69,11 @@ module.exports = CArtifactDeckEncoder = {
         }
 
         let preStringByteCount = bytes.length;
+
         let nameBytes = Buffer.from(name).values();
-        for (let nameByte of nameBytes) {
+        nameBytes.forEach((nameByte) => {
             if (!this.addByte(bytes, nameByte)) return false;
-        }
+        });
 
         let unFullChecksum = this.computeChecksum(bytes, preStringByteCount - this.headerSize);
         let unSmallChecksum = (unFullChecksum & 0x0FF);
@@ -114,7 +116,7 @@ module.exports = CArtifactDeckEncoder = {
         }
         return unResult;
     },
-    addRemainingNumberToBuffer(unValue, unAlreadyWrittenBits, bytes){
+    addRemainingNumberToBuffer: function(unValue, unAlreadyWrittenBits, bytes){
         unValue = unValue >> unAlreadyWrittenBits;
         let unNumBytes = 0;
         while(unValue > 0){

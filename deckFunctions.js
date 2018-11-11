@@ -51,14 +51,14 @@ const CArtifactDeckEncoder = {
         if (!this.addByte(bytes, nameLen)) return false;
         if (!this.addRemainingNumberToBuffer(countHeroes, 3, bytes)) return false;
 
-        checkSum = 0;
+        unCheckSum = 0;
         prevCardId = 0;
 
         for (let currHero = 0; currHero < countHeroes; currHero++) {
             let card = allCards[currHero]
             if (card.turn == 0) return false;
 
-            if (!this.AddCardToBuffer(card.turn, card.id - prevCardId, bytes, checkSum)) return false;//this checkSum should be unChecksum?
+            if (!this.addCardToBuffer(card.turn, card.id - prevCardId, bytes, unCheckSum)) return false;
             prevCardId = card.id;
         }
 
@@ -82,6 +82,16 @@ const CArtifactDeckEncoder = {
 
         if (byteCount == 0) return false;
 
+        let packed = Buffer(...bytes, 'binary');
+        let encoded = Buffer.from(packed).toString('base64');
+        let deckString = this.encodedPrefix + encoded;
+
+        deckString = deckString.replace(/\//g, "_");
+        deckString = deckString.replace(/_/g, "=");
+
+        return deckString;
+
+
     },
     addByte: function (bytes, byte) {
         if (byte > 255) return false;
@@ -90,7 +100,59 @@ const CArtifactDeckEncoder = {
         return true;
     },
     sortByCardId: function (a, b) {
-        return a.id - b.id;
+        return (a.id <= b.id) ? -1 : 1;
+    },
+    extractNBitsWithCarry: function (value, numBits) {
+        let unLimitBit = 1 << numBits;
+        let unResult = (value & (unLimitBit - 1));
+        if(value  >= unLimitBit){
+            unResult = unResult | unLimitBit;
+        }
+        return unResult;
+    },
+    addRemainingNumberToBuffer(unValue, unAlreadyWrittenBits, bytes){
+        unValue = unValue >> unAlreadyWrittenBits;
+        let unNumBytes = 0;
+        while(unValue > 0){
+            let unNextByte = this.extractNBitsWithCarry(unValue, 7);
+            unValue = unValue >> 7;
+            if(!this.addByte(bytes, unNextByte)) return false;
+            unNumBytes++;
+        }
+        return true;
+    },
+    addCardToBuffer: function(unCount, unValue, bytes){
+        if(unCount == 0) return false;
+        let countBytesStart = bytes.length;
+
+        let knFirstByteMaxCount = 0x03;
+        let bExtendedCount = (unCount - 1) >= knFirstByteMaxCount;
+
+        let unFirstByteCount = bExtendedCount ? knFirstByteMaxCount : (unCount - 1);
+        let unFirstByte = (unFirstByteCount << 6);
+        unFirstByte = unFirstByte | this.extractNBitsWithCarry(unValue, 5);
+
+        if (!this.addByte(bytes, unFirstByte)) return false;
+
+        if (!this.addRemainingNumberToBuffer(unValue, 5, bytes)) return false;
+
+        if (bExtendedCount){
+            if(!this.addRemainingNumberToBuffer(unCount, 0, bytes)) return false;
+        }
+
+        let countBytesEnd = bytes.length;
+
+        if(countBytesEnd - countBytesStart > 11) return false;
+
+        return true;
+    },
+    computeChecksum: function(bytes, unNumBytes){
+        let unCheckSum = 0;
+        for(let unAddCheck = this.headerSize; unAddCheck < unNumBytes + this.headerSize; unAddCheck++){
+            let byte = bytes[unAddCheck];
+            unCheckSum+=byte;
+        }
+        return unCheckSum;
     },
     isSet: function () {
         //  discuss at: http://locutus.io/php/isset/

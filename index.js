@@ -1,5 +1,5 @@
 const cardset = require('./cardSet');
-const encoder = require('./deckFunctions.js');
+const encoder = require('./deckFunctionsClass.js');
 const fs = require('fs');
 
 // cardset(0).then((res)=>{

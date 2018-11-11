@@ -1,25 +1,18 @@
-module.exports = CArtifactDeckEncoder = {
-
-    currentVersion: 2,
-    encodedPrefix: "ADC",
-    maxBytesForVarUint32: 5,
-    headerSize: 3,
-
-    encodeDeck: function (deckContents) {
-        console.log("deckContents");
-        
+class CArtifactDeckEncoder {
+    static encodeDeck (deckContents) {
         if (!deckContents) throw Error("no deck contents passed");
 
         let bytes = this.encodeBytes(deckContents);
         
-        if (!bytes) throw Error("no bytes in encodeDeck");
+        
+        if (!bytes) return false;
         let deckCode = this.encodeBytesToString(bytes);
         
-        return deckCode;
-    },
-    encodeBytes: function (deckContents) {
         
-        //need the set check here
+        return deckCode;
+    }
+
+    static encodeBytes(deckContents) {      
         if (!this.isSet(deckContents) || !this.isSet(deckContents.heroes) || !this.isSet(deckContents.cards)) {
             throw Error("deck content, heroes, or cards not a set");
         }
@@ -39,10 +32,10 @@ module.exports = CArtifactDeckEncoder = {
         let checkSumByte = bytes.length;
         if (!this.addByte(bytes, dummyChecksum)) return false;
 
-        nameLen = 0;
-        let name = "";
+        let nameLen = 0;
+        //let name = "";
         if (this.isSet(deckContents.name)) {
-            name = deckContents.name.replace(/<(?:.|\n)*?>/gm, '');//may need to init name on this line instead of 36. need again in line 112
+            var name = deckContents.name.replace(/<(?:.|\n)*?>/gm, '');//may need to init name on this line instead of 36. need again in line 112
             let trimLength = name.length;
 
             while (trimLength > 63) {
@@ -57,8 +50,8 @@ module.exports = CArtifactDeckEncoder = {
         if (!this.addByte(bytes, nameLen)) return false;
         if (!this.addRemainingNumberToBuffer(countHeroes, 3, bytes)) return false;
 
-        unCheckSum = 0;
-        prevCardId = 0;
+        let unCheckSum = 0;
+        let prevCardId = 0;
 
         for (let currHero = 0; currHero < countHeroes; currHero++) {
             let card = allCards[currHero]
@@ -69,11 +62,10 @@ module.exports = CArtifactDeckEncoder = {
         }
 
         let preStringByteCount = bytes.length;
-
         let nameBytes = Buffer.from(name).values();
-        nameBytes.forEach((nameByte) => {
+        for (let nameByte of nameBytes) {
             if (!this.addByte(bytes, nameByte)) return false;
-        });
+        }
 
         let unFullChecksum = this.computeChecksum(bytes, preStringByteCount - this.headerSize);
         let unSmallChecksum = (unFullChecksum & 0x0FF);
@@ -82,8 +74,9 @@ module.exports = CArtifactDeckEncoder = {
         return bytes;
 
 
-    },
-    encodeBytesToString: function (bytes) {
+    }
+    
+    static encodeBytesToString(bytes) {
         let byteCount = bytes.length;
 
         if (byteCount == 0) return false;
@@ -98,25 +91,30 @@ module.exports = CArtifactDeckEncoder = {
         return deckString;
 
 
-    },
-    addByte: function (bytes, byte) {
+    }
+
+    
+    static addByte(bytes, byte) {
         if (byte > 255) return false;
 
         bytes.push(byte);
         return true;
-    },
-    sortByCardId: function (a, b) {
+    }
+    
+    static sortByCardId(a, b) {
         return (a.id <= b.id) ? -1 : 1;
-    },
-    extractNBitsWithCarry: function (value, numBits) {
+    }
+    
+    static extractNBitsWithCarry(value, numBits) {
         let unLimitBit = 1 << numBits;
         let unResult = (value & (unLimitBit - 1));
         if(value  >= unLimitBit){
             unResult = unResult | unLimitBit;
         }
         return unResult;
-    },
-    addRemainingNumberToBuffer: function(unValue, unAlreadyWrittenBits, bytes){
+    }
+    
+    static addRemainingNumberToBuffer(unValue, unAlreadyWrittenBits, bytes){
         unValue = unValue >> unAlreadyWrittenBits;
         let unNumBytes = 0;
         while(unValue > 0){
@@ -126,8 +124,9 @@ module.exports = CArtifactDeckEncoder = {
             unNumBytes++;
         }
         return true;
-    },
-    addCardToBuffer: function(unCount, unValue, bytes){
+    }
+    
+    static addCardToBuffer(unCount, unValue, bytes){
         if(unCount == 0) return false;
         let countBytesStart = bytes.length;
 
@@ -151,16 +150,18 @@ module.exports = CArtifactDeckEncoder = {
         if(countBytesEnd - countBytesStart > 11) return false;
 
         return true;
-    },
-    computeChecksum: function(bytes, unNumBytes){
+    }
+    
+    static computeChecksum(bytes, unNumBytes){
         let unCheckSum = 0;
         for(let unAddCheck = this.headerSize; unAddCheck < unNumBytes + this.headerSize; unAddCheck++){
             let byte = bytes[unAddCheck];
             unCheckSum+=byte;
         }
         return unCheckSum;
-    },
-    isSet: function () {
+    }
+    
+    static isSet(){
         //  discuss at: http://locutus.io/php/isset/
         // original by: Kevin van Zonneveld (http://kvz.io)
         // improved by: FremyCompany
@@ -187,3 +188,10 @@ module.exports = CArtifactDeckEncoder = {
     }
 
 };
+
+CArtifactDeckEncoder.currentVersion = 2;
+CArtifactDeckEncoder.encodedPrefix = "ADC";
+CArtifactDeckEncoder.maxBytesForVarUint32 = 5;
+CArtifactDeckEncoder.headerSize = 3;
+
+module.exports = CArtifactDeckEncoder;

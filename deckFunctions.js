@@ -42,43 +42,49 @@ const CArtifactDeckEncoder = {
             while (trimLength > 63) {
                 let amountToTrim = Math.floor((trimLength - 63) / 4);
                 amountToTrim = amountToTrim > 1 ? amountToTrim : 1;
-                name = name.substring(0, name.length-amountToTrim);
+                name = name.substring(0, name.length - amountToTrim);
                 trimLength = name.length;
             }
             nameLen = name.length;
         }
 
         if (!this.addByte(bytes, nameLen)) return false;
-        if(!this.addRemainingNumberToBuffer(countHeroes, 3, bytes)) return false;
+        if (!this.addRemainingNumberToBuffer(countHeroes, 3, bytes)) return false;
 
         checkSum = 0;
         prevCardId = 0;
 
-        for (let currHero = 0; currHero < countHeroes; currHero++){
+        for (let currHero = 0; currHero < countHeroes; currHero++) {
             let card = allCards[currHero]
-            if(card.turn == 0) return false;
+            if (card.turn == 0) return false;
 
-            if (!this.AddCardToBuffer(card.turn, card.id - prevCardId,bytes,checkSum)) return false;//this checkSum should be unChecksum?
+            if (!this.AddCardToBuffer(card.turn, card.id - prevCardId, bytes, checkSum)) return false;//this checkSum should be unChecksum?
             prevCardId = card.id;
-        } 
+        }
 
         let preStringByteCount = bytes.length;
 
         let nameBytes = Buffer.from(name).values();
-        nameBytes.forEach((nameByte)=>{
-            if(!this.addByte(bytes, nameByte)) return false;
+        nameBytes.forEach((nameByte) => {
+            if (!this.addByte(bytes, nameByte)) return false;
         });
 
-        let unFullChecksum = this.computeChecksum(bytes, preStringByteCount-this.headerSize);
+        let unFullChecksum = this.computeChecksum(bytes, preStringByteCount - this.headerSize);
         let unSmallChecksum = (unFullChecksum & 0x0FF);
 
         bytes[checkSumByte] = unSmallChecksum;
         return bytes;
 
-        
+
     },
-    addByte: function(bytes, byte){
-        if(byte > 255) return false;
+    encodeBytesToString: function (bytes) {
+        let byteCount = bytes.length;
+
+        if (byteCount == 0) return false;
+
+    },
+    addByte: function (bytes, byte) {
+        if (byte > 255) return false;
 
         bytes.push(byte);
         return true;
@@ -112,5 +118,4 @@ const CArtifactDeckEncoder = {
         return true;
     }
 
-}
-}
+};

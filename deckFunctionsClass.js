@@ -2,10 +2,8 @@ class CArtifactDeckEncoder {
     static encodeDeck (deckContents) {
         if (!deckContents) throw Error("no deck contents passed");
 
-        let bytes = this.encodeBytes(deckContents);        
-                
-        if (!bytes) throw Error("failed to encode deck, bytes: "+ bytes);
-        
+        let bytes = this.encodeBytes(deckContents);            
+        if (!bytes) throw Error("Failed to encode deck");
         let deckCode = this.encodeBytesToString(bytes);
         return deckCode;
     }
